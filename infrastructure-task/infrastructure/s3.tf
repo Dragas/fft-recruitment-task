@@ -26,3 +26,27 @@ resource "aws_s3_bucket_policy" "site_bucket_policy" {
   bucket = aws_s3_bucket.site_bucket.id
   policy = data.aws_iam_policy_document.site_bucket_policy.json
 }
+
+locals {
+  application_directory = "../../NextApp"
+  // some file endings have multiple mimetypes
+  // so when using just pick first available
+  // doesnt matter for exercise
+  // csv files are shamelessly taken from https://www.iana.org/assignments/media-types/media-types.xhtml
+  // slightly modified to include js files
+  mimetypes = {for idx, it in flatten([for it in fileset("mime", "*") : csvdecode(file("mime/${it}"))]) : ".${it.Name}" => it.Template...}
+}
+
+resource "aws_s3_object" "app" {
+  for_each = fileset(local.application_directory, "**")
+  bucket = aws_s3_bucket.site_bucket.id
+  key = each.value
+  source = "${local.application_directory}/${each.value}"
+  etag = filemd5("${local.application_directory}/${each.value}")
+  // aws_s3_object does not figure out the mimetype of the file being uploaded, so
+  // it must be generated on the go by fetching anything that comes after .
+  // and inferring that from the mimetype map as key
+  // in case it cannot be done, set binary/octet-stream (the default)
+  // refer to local.mimetypes map
+  content_type = lookup(local.mimetypes, regex("\\.[^.]+$", each.value), "binary/octet-stream")[0]
+}

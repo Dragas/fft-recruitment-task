@@ -34,6 +34,10 @@ resource "aws_cloudfront_distribution" "cloudfront" {
       event_type = "viewer-request"
       lambda_arn = aws_lambda_function.viewer_request_lambda.qualified_arn
     }
+    lambda_function_association {
+      event_type = "viewer-response"
+      lambda_arn = aws_lambda_function.viewer_response_lambda.qualified_arn
+    }
   }
 
   restrictions {
