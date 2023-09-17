@@ -11,6 +11,7 @@ resource "aws_cloudfront_distribution" "cloudfront" {
     origin_id                = "files"
     domain_name              = aws_s3_bucket.site_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.cf_to_s3.id
+    origin_path = "/app"
   }
 
   // For any request, use the files from the S3 bucket

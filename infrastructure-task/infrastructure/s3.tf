@@ -8,7 +8,7 @@ resource "aws_s3_bucket" "site_bucket" {
 data "aws_iam_policy_document" "site_bucket_policy" {
   statement {
     actions   = ["s3:GetObject", "s3:ListBucket"]
-    resources = ["${aws_s3_bucket.site_bucket.arn}/*", aws_s3_bucket.site_bucket.arn]
+    resources = ["${aws_s3_bucket.site_bucket.arn}/app/*", aws_s3_bucket.site_bucket.arn]
     principals {
       type        = "Service"
       identifiers = ["cloudfront.amazonaws.com"]
@@ -40,7 +40,7 @@ locals {
 resource "aws_s3_object" "app" {
   for_each = fileset(local.application_directory, "**")
   bucket = aws_s3_bucket.site_bucket.id
-  key = each.value
+  key = "/app/${each.value}"
   source = "${local.application_directory}/${each.value}"
   etag = filemd5("${local.application_directory}/${each.value}")
   // aws_s3_object does not figure out the mimetype of the file being uploaded, so
@@ -49,4 +49,14 @@ resource "aws_s3_object" "app" {
   // in case it cannot be done, set binary/octet-stream (the default)
   // refer to local.mimetypes map
   content_type = lookup(local.mimetypes, regex("\\.[^.]+$", each.value), "binary/octet-stream")[0]
+}
+
+resource "aws_s3_object" "config" {
+  // configuration object for experiments
+  // will be loaded in lambdas to circumvent
+  // limitation on environment variables
+  bucket = aws_s3_bucket.site_bucket.id
+  key = "/config/experiments/home.json"
+  source = "./config/experiments/home.json"
+  content_type = lookup(local.mimetypes, ".json", "binary/octet-stream")[0]
 }

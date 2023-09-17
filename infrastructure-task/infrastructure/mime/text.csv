@@ -23,6 +23,7 @@ hl7v2,text/hl7v2,[HL7][Marc_Duteau]
 html,text/html,[W3C][Robin_Berjon]
 javascript,text/javascript,[RFC9239]
 js,text/javascript,[RFC9239]
+json,application/json,self
 jcr-cnd,text/jcr-cnd,[Peeter_Piegaze]
 markdown,text/markdown,[RFC7763]
 mizar,text/mizar,[Jesse_Alama]
