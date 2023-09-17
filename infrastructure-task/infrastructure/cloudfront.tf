@@ -23,11 +23,23 @@ resource "aws_cloudfront_distribution" "cloudfront" {
     min_ttl                = 0
     default_ttl            = 0
     max_ttl                = 0
+    # cache_policy_id = aws_cloudfront_cache_policy.experiment_cookie_policy
+    cache_policy_id        = "943583f4-f58e-4f72-b1bb-c34f17598b43"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
+    path_pattern           = "/home*"
+    target_origin_id       = "files"
+    viewer_protocol_policy = "redirect-to-https"
     forwarded_values {
       query_string = false
-      headers      = []
       cookies {
-        forward = "none"
+        whitelisted_names = [
+          "Experiment"
+        ]
+        forward = "whitelist"
       }
     }
     // Invoke the lambda function as the first part of processing every request
@@ -59,3 +71,36 @@ resource "aws_cloudfront_origin_access_control" "cf_to_s3" {
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
+
+// include AB testing cookie in the cache key
+// might be this issue: https://github.com/hashicorp/terraform-provider-aws/issues/22467#issuecomment-1684322257
+// crashed on windows terraform-aws-provider 5.14.0
+// create by hand and import uuid
+#resource "aws_cloudfront_cache_policy" "experiment_cookie_policy" {
+#  name = "experiment_cookie_policy"
+#  comment = "includes experiment cookie in the cache key"
+#  default_ttl = 3600
+#  max_ttl = 86400
+#  min_ttl = 600
+#  parameters_in_cache_key_and_forwarded_to_origin {
+#    enable_accept_encoding_gzip = true
+#    enable_accept_encoding_brotli = true
+#    cookies_config {
+#      cookie_behavior = "whitelist"
+#      cookies {
+#        // should come from some constants file and get written to both request and response lambdas
+#        items = ["Experiment"]
+#      }
+#    }
+#    headers_config {}
+#    query_strings_config {
+#      query_string_behavior = "none"
+#    }
+#  }
+#}
+# ignored by windows terraform
+#import {
+#  to = aws_cloudfront_cache_policy.experiment_cookie_policy
+#  id = "943583f4-f58e-4f72-b1bb-c34f17598b43"
+#}
+
