@@ -19,6 +19,14 @@ data "aws_iam_policy_document" "site_bucket_policy" {
       values   = [aws_cloudfront_distribution.cloudfront.arn]
     }
   }
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.site_bucket.arn}/config/*"]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.lambda_role.arn]
+    }
+  }
 }
 
 // Apply the policy above to the bucket
