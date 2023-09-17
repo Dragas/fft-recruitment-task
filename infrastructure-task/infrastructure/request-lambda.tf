@@ -15,23 +15,12 @@ resource "aws_lambda_function" "viewer_request_lambda" {
   source_code_hash = data.archive_file.request_lambda.output_base64sha256
   runtime          = "nodejs18.x"
   publish          = true
+#  lambda at edge cannot have envs
+#  environment {
+#    variables = local.common_lambda_envs
+#  }
 }
 
-// The role that will be used to run our lambda function
-resource "aws_iam_role" "lambda_role" {
-  name               = "viewer-request-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_edge_runner.json
-}
 
 
 
-resource "aws_iam_policy" "lambda_log_policy" {
-  name   = "viewer-request-lambda-policy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.lambda_log.json
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_policy" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_log_policy.arn
-}

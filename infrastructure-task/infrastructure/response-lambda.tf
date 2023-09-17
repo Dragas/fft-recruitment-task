@@ -17,19 +17,4 @@ resource "aws_lambda_function" "viewer_response_lambda" {
   publish          = true
 }
 
-// The role that will be used to run our lambda function
-resource "aws_iam_role" "response_lambda_role" {
-  name               = "viewer-response-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_edge_runner.json
-}
 
-resource "aws_iam_policy" "response_lambda_log_policy" {
-  name   = "viewer-response-lambda-policy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.lambda_log.json
-}
-
-resource "aws_iam_role_policy_attachment" "response_lambda_policy" {
-  role       = aws_iam_role.response_lambda_role.name
-  policy_arn = aws_iam_policy.response_lambda_log_policy.arn
-}
